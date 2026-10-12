@@ -1,0 +1,472 @@
+syntax = "proto3";
+
+// Reconstructed from Wispr Flow 1.6.1102 protobuf-ts metadata (.webpack/main/index.js).
+// Field numbers/types are exact; comments/defaults are not recoverable.
+package flow_api.v1;
+
+import "google/protobuf/duration.proto";
+
+message Version {
+  uint32 major = 1;
+  uint32 minor = 2;
+  uint32 patch = 3;
+}
+
+message Client {
+  string name = 1;
+  Platform platform = 2;
+  Version version = 3;
+}
+
+message App {
+  string name = 1;
+  string bundle_id = 2;
+  string url = 3;
+  AppType type = 4;
+}
+
+message Textbox {
+  optional string contents = 1;
+  optional string before_text = 2;
+  optional string selected_text = 3;
+  optional string after_text = 4;
+}
+
+message DynamicVocabulary {
+  repeated string screen_content_ax = 1;
+  repeated string screen_content_ocr = 2;
+  repeated string variable_names = 3;
+  repeated string file_names = 4;
+}
+
+message ChatMessage {
+  ChatRole role = 1;
+  string content = 2;
+  string sender_id = 3;
+}
+
+message Conversation {
+  string id = 1;
+  repeated string participants = 2;
+  repeated ChatMessage messages = 3;
+}
+
+message Context {
+  App app = 1;
+  Textbox textbox = 2;
+  DynamicVocabulary vocabulary = 3;
+  string user_identifier = 4;
+  string content_text = 5;
+  string content_html = 6;
+  repeated App session_dictation_apps = 7;
+  bytes screenshot = 8;
+  Conversation conversation = 9;
+}
+
+message Metadata {
+  string user_id = 1;
+  string session_id = 2;
+  string request_id = 3;
+  AudioEncoding audio_encoding = 4;
+  Environment environment = 5;
+  Client client = 6;
+  bool debug = 7;
+  string referral_code = 8;
+  bool always_wait_scribe = 9;
+}
+
+message GeneralWritingStyle {
+  WritingStyle other = 1;
+  WritingStyle personal = 2;
+  WritingStyle work = 3;
+  WritingStyle email = 4;
+}
+
+message TaggingStyle {
+  optional bool slack = 1;
+}
+
+message SignatureStyle {
+  FlowSignaturePrefix flow_signature_prefix = 1;
+  optional bool flow_signature_hyperlink = 2;
+  optional bool sign_emails = 3;
+}
+
+message StyleConfig {
+  GeneralWritingStyle general_style = 1;
+  WritingStyle override_style = 2;
+  TaggingStyle tagging = 3;
+  SignatureStyle signature = 4;
+  EditingStrength editing_strength = 5;
+}
+
+message AudioPackets {
+  repeated bytes items = 1;
+}
+
+message AudioFile {
+  bytes data = 1;
+}
+
+message Payload {
+  oneof audio {
+    AudioPackets audio_packets = 1;
+    AudioFile audio_file = 2;
+  }
+}
+
+message Text {
+  string content = 1;
+  uint32 num_tokens = 2;
+  repeated Language languages = 3;
+}
+
+message Progress {
+  google.protobuf.Duration transcriber = 1;
+  bool transcriber_finished = 2;
+  google.protobuf.Duration formatter = 3;
+  bool formatter_finished = 4;
+  bool post_processing_finished = 5;
+}
+
+message UserActions {
+  bool check_mic = 1;
+  Language check_language = 2;
+}
+
+message WordAlignment {
+  string word = 1;
+  float score = 2;
+}
+
+message CandidateBeam {
+  Text text = 1;
+  float score = 2;
+  Confidence confidence = 3;
+  Origin origin = 4;
+  optional float alignment_score = 5;
+  optional string original_text = 6;
+  repeated WordAlignment word_alignments = 7;
+}
+
+message State {
+  Progress progress = 1;
+  Text raw_text = 2;
+  Text formatted_text = 3;
+  Confidence confidence = 4;
+  UserActions user_actions = 5;
+  repeated CandidateBeam candidate_beams = 6;
+  optional float audio_snr = 7;
+  optional float audio_volume = 8;
+  optional float mean_alignment_score = 9;
+  optional uint32 formatted_raw_len = 10;
+}
+
+message User {
+  string first_name = 1;
+  string last_name = 2;
+  string email = 3;
+}
+
+message StaticVocabulary {
+  repeated string dictionary_personal = 1;
+  repeated string dictionary_team = 2;
+  repeated string dictionary_personal_starred = 3;
+  repeated string dictionary_team_starred = 4;
+}
+
+message Replacements {
+  map<string, string> replacements_personal = 1;
+  map<string, string> replacements_team = 2;
+  map<string, string> snippets_personal = 3;
+  map<string, string> snippets_team = 4;
+}
+
+message Preferences {
+  User user = 1;
+  repeated Language language = 2;
+  StaticVocabulary vocabulary = 3;
+  Replacements replacements = 4;
+  StyleConfig style_config = 5;
+}
+
+message Init {
+  Metadata metadata = 1;
+  Preferences preferences = 2;
+  State state = 3;
+}
+
+message Request {
+  Init init = 1;
+  Context context = 2;
+  Payload payload = 3;
+  Commit commit = 4;
+}
+
+message ResponseTime {
+  google.protobuf.Duration transcribe = 1;
+  google.protobuf.Duration transcribe_overhead = 2;
+  google.protobuf.Duration format = 3;
+  google.protobuf.Duration format_overhead = 4;
+  google.protobuf.Duration post_process = 5;
+  google.protobuf.Duration total = 6;
+  google.protobuf.Duration external_asr_time = 7;
+  google.protobuf.Duration external_llm_time = 8;
+  google.protobuf.Duration generate_queue_duration = 9;
+  google.protobuf.Duration generate_work_duration = 10;
+}
+
+message Transcription {
+  string html = 1;
+  string plaintext = 2;
+  uint32 num_tokens = 3;
+  repeated Language languages = 4;
+  float confidence = 5;
+  bool language_detection_low_confidence = 6;
+}
+
+message TranscriptionStats {
+  uint32 word_deletions = 1;
+  uint32 context_word_count = 2;
+  uint32 word_substitutions = 3;
+}
+
+message Result {
+  Transcription output = 1;
+  google.protobuf.Duration audio_duration = 2;
+  ResponseTime response_time = 3;
+  SignatureStatus signature_status = 4;
+  ResultStatus status = 5;
+  TranscriptionStats stats = 6;
+  string transcript_origin = 7;
+  string server_address = 8;
+  string format_skip_reason = 9;
+}
+
+message Heartbeat {
+  float audio_received_seconds = 1;
+  bool commit_ack = 2;
+}
+
+message Response {
+  Result result = 1;
+  State state = 2;
+  repeated State all_states = 3;
+  Heartbeat heartbeat = 4;
+}
+
+enum Platform {
+  PLATFORM_UNSPECIFIED = 0;
+  PLATFORM_MACOS = 1;
+  PLATFORM_WIN32 = 2;
+  PLATFORM_IOS = 3;
+  PLATFORM_ANDROID = 4;
+  PLATFORM_WEB = 5;
+  PLATFORM_API = 6;
+}
+
+enum AppType {
+  APP_TYPE_UNSPECIFIED = 0;
+  APP_TYPE_OTHER = 1;
+  APP_TYPE_BROWSER = 2;
+  APP_TYPE_PERSONAL_MESSAGING = 3;
+  APP_TYPE_WORK_MESSAGING = 4;
+  APP_TYPE_EMAIL = 5;
+  APP_TYPE_CHATBOT = 6;
+  APP_TYPE_DEVELOPER = 7;
+}
+
+enum ChatRole {
+  CHAT_ROLE_UNSPECIFIED = 0;
+  CHAT_ROLE_USER = 1;
+  CHAT_ROLE_HUMAN = 2;
+  CHAT_ROLE_ASSISTANT = 3;
+}
+
+enum AudioEncoding {
+  AUDIO_ENCODING_UNSPECIFIED = 0;
+  AUDIO_ENCODING_WAV = 1;
+  AUDIO_ENCODING_OPUS = 2;
+}
+
+enum Environment {
+  ENVIRONMENT_UNSPECIFIED = 0;
+  ENVIRONMENT_PRODUCTION = 1;
+  ENVIRONMENT_STAGING = 2;
+  ENVIRONMENT_DEVELOPMENT = 3;
+  ENVIRONMENT_TEST = 4;
+}
+
+enum WritingStyle {
+  WRITING_STYLE_UNSPECIFIED = 0;
+  WRITING_STYLE_FORMAL = 1;
+  WRITING_STYLE_CASUAL = 2;
+  WRITING_STYLE_VERY_CASUAL = 3;
+  WRITING_STYLE_EXCITED = 4;
+  WRITING_STYLE_GENZ = 5;
+}
+
+enum FlowSignaturePrefix {
+  FLOW_SIGNATURE_PREFIX_UNSPECIFIED = 0;
+  FLOW_SIGNATURE_PREFIX_SPOKEN = 1;
+  FLOW_SIGNATURE_PREFIX_WRITTEN = 2;
+}
+
+enum EditingStrength {
+  EDITING_STRENGTH_UNSPECIFIED = 0;
+  EDITING_STRENGTH_VERBATIM = 1;
+  EDITING_STRENGTH_LIGHT = 2;
+  EDITING_STRENGTH_MEDIUM = 3;
+  EDITING_STRENGTH_HEAVY = 4;
+}
+
+enum Language {
+  LANGUAGE_UNSPECIFIED = 0;
+  LANGUAGE_ENGLISH_US = 1;
+  LANGUAGE_ENGLISH_UK = 2;
+  LANGUAGE_CHINESE_SIMPLIFIED = 3;
+  LANGUAGE_CHINESE_TRADITIONAL = 4;
+  LANGUAGE_GERMAN = 5;
+  LANGUAGE_SPANISH = 6;
+  LANGUAGE_RUSSIAN = 7;
+  LANGUAGE_KOREAN = 8;
+  LANGUAGE_FRENCH = 9;
+  LANGUAGE_JAPANESE = 10;
+  LANGUAGE_PORTUGUESE = 11;
+  LANGUAGE_TURKISH = 12;
+  LANGUAGE_POLISH = 13;
+  LANGUAGE_CATALAN = 14;
+  LANGUAGE_DUTCH = 15;
+  LANGUAGE_ARABIC = 16;
+  LANGUAGE_SWEDISH = 17;
+  LANGUAGE_ITALIAN = 18;
+  LANGUAGE_INDONESIAN = 19;
+  LANGUAGE_HINDI = 20;
+  LANGUAGE_HINGLISH = 21;
+  LANGUAGE_FINNISH = 22;
+  LANGUAGE_VIETNAMESE = 23;
+  LANGUAGE_HEBREW = 24;
+  LANGUAGE_UKRAINIAN = 25;
+  LANGUAGE_GREEK = 26;
+  LANGUAGE_MALAY = 27;
+  LANGUAGE_CZECH = 28;
+  LANGUAGE_ROMANIAN = 29;
+  LANGUAGE_DANISH = 30;
+  LANGUAGE_HUNGARIAN = 31;
+  LANGUAGE_TAMIL = 32;
+  LANGUAGE_NORWEGIAN = 33;
+  LANGUAGE_THAI = 34;
+  LANGUAGE_URDU = 35;
+  LANGUAGE_CROATIAN = 36;
+  LANGUAGE_BULGARIAN = 37;
+  LANGUAGE_LITHUANIAN = 38;
+  LANGUAGE_LATIN = 39;
+  LANGUAGE_MAORI = 40;
+  LANGUAGE_MALAYALAM = 41;
+  LANGUAGE_WELSH = 42;
+  LANGUAGE_SLOVAK = 43;
+  LANGUAGE_TELUGU = 44;
+  LANGUAGE_PERSIAN = 45;
+  LANGUAGE_LATVIAN = 46;
+  LANGUAGE_BENGALI = 47;
+  LANGUAGE_SERBIAN = 48;
+  LANGUAGE_AZERBAIJANI = 49;
+  LANGUAGE_SLOVENIAN = 50;
+  LANGUAGE_KANNADA = 51;
+  LANGUAGE_ESTONIAN = 52;
+  LANGUAGE_MACEDONIAN = 53;
+  LANGUAGE_BRETON = 54;
+  LANGUAGE_BASQUE = 55;
+  LANGUAGE_ICELANDIC = 56;
+  LANGUAGE_ARMENIAN = 57;
+  LANGUAGE_NEPALI = 58;
+  LANGUAGE_MONGOLIAN = 59;
+  LANGUAGE_BOSNIAN = 60;
+  LANGUAGE_KAZAKH = 61;
+  LANGUAGE_ALBANIAN = 62;
+  LANGUAGE_SWAHILI = 63;
+  LANGUAGE_GALICIAN = 64;
+  LANGUAGE_MARATHI = 65;
+  LANGUAGE_PUNJABI = 66;
+  LANGUAGE_SINHALA = 67;
+  LANGUAGE_KHMER = 68;
+  LANGUAGE_SHONA = 69;
+  LANGUAGE_YORUBA = 70;
+  LANGUAGE_SOMALI = 71;
+  LANGUAGE_AFRIKAANS = 72;
+  LANGUAGE_OCCITAN = 73;
+  LANGUAGE_GEORGIAN = 74;
+  LANGUAGE_BELARUSIAN = 75;
+  LANGUAGE_TAJIK = 76;
+  LANGUAGE_SINDHI = 77;
+  LANGUAGE_GUJARATI = 78;
+  LANGUAGE_AMHARIC = 79;
+  LANGUAGE_YIDDISH = 80;
+  LANGUAGE_LAO = 81;
+  LANGUAGE_UZBEK = 82;
+  LANGUAGE_FAROESE = 83;
+  LANGUAGE_HAITIAN_CREOLE = 84;
+  LANGUAGE_PASHTO = 85;
+  LANGUAGE_TURKMEN = 86;
+  LANGUAGE_NYNORSK = 87;
+  LANGUAGE_MALTESE = 88;
+  LANGUAGE_SANSKRIT = 89;
+  LANGUAGE_LUXEMBOURGISH = 90;
+  LANGUAGE_MYANMAR = 91;
+  LANGUAGE_TIBETAN = 92;
+  LANGUAGE_TAGALOG = 93;
+  LANGUAGE_MALAGASY = 94;
+  LANGUAGE_ASSAMESE = 95;
+  LANGUAGE_TATAR = 96;
+  LANGUAGE_HAWAIIAN = 97;
+  LANGUAGE_LINGALA = 98;
+  LANGUAGE_HAUSA = 99;
+  LANGUAGE_BASHKIR = 100;
+  LANGUAGE_JAVANESE = 101;
+  LANGUAGE_SUNDANESE = 102;
+  LANGUAGE_CANTONESE = 103;
+  LANGUAGE_GERMAN_SWISS = 104;
+  LANGUAGE_ENGLISH_CA = 105;
+  LANGUAGE_UNDETERMINED = 106;
+}
+
+enum Confidence {
+  CONFIDENCE_UNSPECIFIED = 0;
+  CONFIDENCE_NONE = 1;
+  CONFIDENCE_LOW = 2;
+  CONFIDENCE_MEDIUM = 3;
+  CONFIDENCE_HIGH = 4;
+}
+
+enum Origin {
+  ORIGIN_UNSPECIFIED = 0;
+  ORIGIN_MIXTURE = 1;
+  ORIGIN_WHISPER = 2;
+  ORIGIN_SCRIBE = 3;
+  ORIGIN_VOXTRAL = 4;
+  ORIGIN_QWEN = 5;
+}
+
+enum Commit {
+  COMMIT_UNSPECIFIED = 0;
+  COMMIT_TRUE = 1;
+  COMMIT_FALSE = 2;
+}
+
+enum SignatureStatus {
+  SIGNATURE_STATUS_UNSPECIFIED = 0;
+  SIGNATURE_STATUS_ELIGIBLE = 1;
+  SIGNATURE_STATUS_ADDED = 2;
+}
+
+enum ResultStatus {
+  RESULT_STATUS_UNSPECIFIED = 0;
+  RESULT_STATUS_FORMATTED = 1;
+  RESULT_STATUS_ERROR = 2;
+  RESULT_STATUS_RAW_TRANSCRIPT = 3;
+}
+
+service TranscriptionService {
+  rpc Transcribe(Request) returns (Response);
+  rpc TranscribeStream(stream Request) returns (stream Response);
+}

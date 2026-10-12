@@ -129,7 +129,15 @@ class Authenticator:
                 first_name=tokens.first_name,
                 last_name=tokens.last_name,
                 workos_client_id=tokens.workos_client_id,
+                wispr_user_id=tokens.wispr_user_id,
             )
+            self.store.save(updated)
+            return updated
+
+    def remember_wispr_user_id(self, wispr_user_id: str) -> TokenSet:
+        """Persist the Wispr profile UUID into the stored session (re-read under the lock)."""
+        with self.store.locked():
+            updated = self.current().model_copy(update={"wispr_user_id": wispr_user_id})
             self.store.save(updated)
             return updated
 

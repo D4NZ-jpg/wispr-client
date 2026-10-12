@@ -27,7 +27,9 @@ def test_expiring_token_refreshes_and_persists(
     settings: WisprSettings, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     store = TokenStore(settings.token_file)
-    store.save(TokenSet.from_tokens(make_jwt(exp_in=30), "old-refresh", first_name="Dan"))
+    store.save(
+        TokenSet.from_tokens(make_jwt(exp_in=30), "old-refresh", first_name="Dan", wispr_user_id="uuid-1")
+    )
     new_access = make_jwt(exp_in=7200)
     calls: list[dict[str, Any]] = []
 
@@ -46,6 +48,7 @@ def test_expiring_token_refreshes_and_persists(
     assert saved is not None
     assert saved.refresh_token.get_secret_value() == "new-refresh"
     assert saved.first_name == "Dan"  # profile fields preserved
+    assert saved.wispr_user_id == "uuid-1"
 
 
 def test_refresh_failure_is_auth_error(settings: WisprSettings, monkeypatch: pytest.MonkeyPatch) -> None:

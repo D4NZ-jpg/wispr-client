@@ -43,5 +43,20 @@ class WisprApi:
     def profile(self) -> UserProfile:
         return self.request("GET", "/api/v1/user/profile", UserProfile)
 
+    def dictation_user_id(self) -> str:
+        """The user id that dictation requests must carry: Wispr's profile UUID.
+
+        Supabase sessions use that UUID as the JWT subject. WorkOS sessions do not, so the UUID is
+        fetched from the profile once and stored with the session.
+        """
+        tokens = self.auth.current()
+        if tokens.wispr_user_id:
+            return tokens.wispr_user_id
+        if tokens.provider == "supabase":
+            return tokens.user_id
+        wispr_user_id = self.profile().user_id
+        self.auth.remember_wispr_user_id(wispr_user_id)
+        return wispr_user_id
+
     def _forced_token(self) -> str:
         return self.auth.refresh(force=True).access_token.get_secret_value()

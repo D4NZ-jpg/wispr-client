@@ -9,9 +9,11 @@ import pytest
 
 from wispr_client import cli
 from wispr_client._proto import flow_api_v1_pb2 as pb
-from wispr_client.auth import Authenticator
+from wispr_client.api import WisprApi
+from wispr_client.auth import Authenticator, TokenStore
+from wispr_client.config import WisprSettings
 from wispr_client.errors import TranscriptionError
-from wispr_client.models import STREAM_EVENT_ADAPTER, FinalEvent, PartialEvent, TokenSet
+from wispr_client.models import STREAM_EVENT_ADAPTER, FinalEvent, PartialEvent, TokenSet, UserProfile
 from wispr_client.transcribe import TranscriptionClient
 
 from .conftest import FakeWispr, make_jwt
@@ -126,3 +128,33 @@ def test_cli_not_logged_in(
     clip.write_bytes(b"\x00\x00" * 100)
     assert cli.main(["transcribe", str(clip), "--json"]) == cli.EXIT_AUTH
     assert json.loads(capsys.readouterr().out)["kind"] == "NotLoggedInError"
+
+
+def test_workos_session_dictates_with_profile_uuid(
+    settings: WisprSettings,
+    fake_server: tuple[FakeWispr, str],
+    pcm_1s: bytes,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake, _ = fake_server
+    store = TokenStore(settings.token_file)
+    workos_jwt = make_jwt("user_01WORKOS", iss="https://api.workos.com/user_management/client_01XYZ")
+    store.save(TokenSet.from_tokens(workos_jwt, "r1", workos_client_id="client_01XYZ"))
+    profile_calls: list[None] = []
+
+    def fake_profile(self: WisprApi) -> UserProfile:
+        profile_calls.append(None)
+        return UserProfile(user_id="0b7f6c1e-1111-4222-8333-444455556666")
+
+    monkeypatch.setattr(WisprApi, "profile", fake_profile)
+    client = TranscriptionClient(Authenticator(settings, store))
+    client.transcribe_pcm(pcm_1s)
+    client.transcribe_pcm(pcm_1s)
+
+    init_ids = [r.init.metadata.user_id for r in fake.requests if r.HasField("init")]
+    assert init_ids == ["0b7f6c1e-1111-4222-8333-444455556666"] * 2
+    assert len(profile_calls) == 1  # resolved once, then read from the stored session
+    saved = store.load()
+    assert saved is not None
+    assert saved.wispr_user_id == "0b7f6c1e-1111-4222-8333-444455556666"
+    assert saved.user_id == "user_01WORKOS"

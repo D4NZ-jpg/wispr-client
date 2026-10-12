@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Final, Literal
 import grpc
 
 from ._proto import flow_api_v1_pb2 as pb
+from .api import WisprApi
 from .audio import Packetizer, load_pcm
 from .auth import Authenticator
 from .errors import TranscriptionError
@@ -239,7 +240,7 @@ class TranscriptionClient:
         self, *, language: str | None = None, formatting: bool = True, vocabulary: Sequence[str] = ()
     ) -> StreamSession:
         token = self.auth.access_token()
-        tokens = self.auth.current()
+        user_id = WisprApi(self.auth).dictation_user_id()
         request_id = str(uuid.uuid4())
         factory = _channel(self.settings.grpc_host, tls=self.settings.grpc_tls).stream_stream(
             _METHOD,
@@ -249,7 +250,7 @@ class TranscriptionClient:
         return StreamSession(
             factory,
             self._metadata(token, formatting=formatting),
-            self._first_request(tokens.user_id, request_id, language, vocabulary),
+            self._first_request(user_id, request_id, language, vocabulary),
             request_id,
             self.settings.stream_timeout_s,
         )

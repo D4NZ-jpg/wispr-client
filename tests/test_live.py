@@ -21,7 +21,8 @@ def live_auth() -> Authenticator:
 
 
 def test_profile(live_auth: Authenticator) -> None:
-    assert WisprApi(live_auth).profile().user_id == live_auth.current().user_id
+    api = WisprApi(live_auth)
+    assert api.profile().user_id == api.dictation_user_id()
 
 
 def test_tone_is_not_speech(live_auth: Authenticator) -> None:

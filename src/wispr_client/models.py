@@ -69,6 +69,10 @@ class TokenSet(_Frozen):
     first_name: str | None = None
     last_name: str | None = None
     workos_client_id: str | None = None
+    wispr_user_id: str | None = Field(
+        default=None,
+        description="Wispr profile UUID sent with dictation; differs from the JWT subject for WorkOS",
+    )
     obtained_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     @classmethod
